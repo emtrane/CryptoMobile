@@ -338,10 +338,11 @@ class AES_3GPP(object):
         an LTE bearer is usually coded on 5 bits
         optional bitlen argument represents the length of data_in in bits
     
-    EIA2(key [16 bytes], count [uint32], bearer [uint32], dir [0 or 1], data_in [bytes], bitlen [uint32])
-        -> mac [4 bytes]
+    EIA2(key [16 bytes], count [uint32], bearer [uint32], dir [0 or 1], data_in [bytes], bitlen [uint32], maclen [default 32])
+        -> mac [maclen bits]
         
         optional bitlen argument represents the length of data_in in bits
+        optional maclen argument represents the length of mac return value in bits
     """
     
     def EEA2(self, key, count, bearer, dir, data_in, bitlen=None):
@@ -373,7 +374,7 @@ class AES_3GPP(object):
         else:
             return enc
     
-    def EIA2(self, key, count, bearer, dir, data_in, bitlen=None):
+    def EIA2(self, key, count, bearer, dir, data_in, bitlen=None, maclen=32):
         # avoid uint32 under/overflow
         if not 0 <= count < MAX_UINT32 or \
         not 0 <= bearer <= 32:
@@ -390,7 +391,7 @@ class AES_3GPP(object):
                 data_in = data_in[:blen]
         #
         M = pack('>II', count, (bearer<<27)+(dir<<26)) + data_in
-        cmac = CMAC(key, AES_ECB, Tlen=32)
+        cmac = CMAC(key, AES_ECB, Tlen=maclen)
         return cmac.cmac(M, 64+bitlen)
 
 
